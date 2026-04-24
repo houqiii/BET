@@ -1,0 +1,9 @@
+Solve the problem efficiently.
+Before reasoning, output:
+<predict>
+Difficulty: <number in [0,1]>
+Budget: <number in [0,1]>
+</predict>
+Then reason inside <think>...</think>.
+End with exactly one final answer in \boxed{}.
+If the problem is beyond your current reliable capability, output \boxed{Unsolvable}.

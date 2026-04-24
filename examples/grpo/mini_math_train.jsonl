@@ -1,0 +1,20 @@
+{"id": "math-001", "problem": "Find the closest fraction p/q with q < 100 to sqrt(2).", "answer": "\\boxed{99/70}", "tags": ["number_theory", "short_solve"]}
+{"id": "math-002", "problem": "How many positive divisors does 360 have?", "answer": "\\boxed{24}", "tags": ["number_theory", "short_solve"]}
+{"id": "math-003", "problem": "Let a_1=1 and a_{n+1}=2a_n+1. Compute a_8.", "answer": "\\boxed{255}", "tags": ["algebra", "short_solve"]}
+{"id": "math-004", "problem": "Let x+y=10 with x,y>0. What is the maximum possible value of xy?", "answer": "\\boxed{25}", "tags": ["inequality", "short_solve"]}
+{"id": "math-005", "problem": "A fair six-sided die is rolled four times. What is the probability that at least one 6 appears?", "answer": "\\boxed{671/1296}", "tags": ["probability"]}
+{"id": "math-006", "problem": "Find the remainder when 7^2025 is divided by 100.", "answer": "\\boxed{7}", "tags": ["modular_arithmetic"]}
+{"id": "math-007", "problem": "In triangle ABC, AB=13, AC=14, and BC=15. Find the area of the triangle.", "answer": "\\boxed{84}", "tags": ["geometry"]}
+{"id": "math-008", "problem": "A polynomial P(x) leaves remainder 2 when divided by x-1 and remainder 5 when divided by x-2. What is the remainder when P(x) is divided by (x-1)(x-2)?", "answer": "\\boxed{3x-1}", "tags": ["algebra"]}
+{"id": "math-009", "problem": "How many arrangements of the letters MISSISSIPPI have no two S's adjacent?", "answer": "\\boxed{7350}", "tags": ["combinatorics", "hero_call"]}
+{"id": "math-010", "problem": "Let positive integers a,b satisfy gcd(a,b)=1 and a/b + b/a = 25/12. Find a+b.", "answer": "\\boxed{7}", "tags": ["number_theory"]}
+{"id": "math-011", "problem": "Find all real x such that sqrt(x+3)+sqrt(7-x)=4. Report the sum of all solutions.", "answer": "\\boxed{4}", "tags": ["algebra"]}
+{"id": "math-012", "problem": "A 5 by 5 grid is tiled by dominoes after one corner square is removed. Decide whether such a tiling exists.", "answer": "\\boxed{Yes}", "tags": ["invariant", "nice_fold_like"]}
+{"id": "math-013", "problem": "Let S be the set of integers n from 1 to 1000 such that n is divisible by 3 or 5 but not by 15. Find |S|.", "answer": "\\boxed{400}", "tags": ["counting"]}
+{"id": "math-014", "problem": "If tan x = 2 and x is acute, compute sin(2x).", "answer": "\\boxed{4/5}", "tags": ["trigonometry"]}
+{"id": "math-015", "problem": "Find the smallest positive integer n such that 2^n has last three digits 376.", "answer": "\\boxed{100}", "tags": ["modular_arithmetic"]}
+{"id": "math-016", "problem": "A sequence has generating function 1/(1-3t+2t^2). If a_0=1, compute a_5.", "answer": "\\boxed{63}", "tags": ["algebra", "recurrence"]}
+{"id": "math-017", "problem": "How many subsets of {1,2,...,10} have sum divisible by 3?", "answer": "\\boxed{344}", "tags": ["combinatorics", "borderline"]}
+{"id": "math-018", "problem": "Let r be the inradius of a right triangle with legs 9 and 12. Find r.", "answer": "\\boxed{3}", "tags": ["geometry"]}
+{"id": "math-019", "problem": "Find the coefficient of x^5 in (1+x+x^2)^6.", "answer": "\\boxed{126}", "tags": ["combinatorics"]}
+{"id": "math-020", "problem": "Suppose f(x)=x^2-4x+7. What is the minimum value of f(x) over all real x?", "answer": "\\boxed{3}", "tags": ["algebra", "short_solve"]}

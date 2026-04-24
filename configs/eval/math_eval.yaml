@@ -1,0 +1,3 @@
+predictions: examples/predictions/sample_generations.jsonl
+output: outputs/eval/sample_metrics.json
+boxed_answer_only: true

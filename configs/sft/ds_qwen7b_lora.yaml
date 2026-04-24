@@ -1,0 +1,25 @@
+model:
+  name_or_path: /path/to/DeepSeek-R1-Distill-Qwen-7B
+  attn_implementation: sdpa
+
+data:
+  train_file: examples/sft/bet_cold_start_examples.jsonl
+
+lora:
+  r: 64
+  alpha: 128
+  dropout: 0.05
+
+training:
+  output_dir: outputs/ds_qwen7b_bet_sft
+  num_train_epochs: 2
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 16
+  learning_rate: 2.0e-5
+  warmup_ratio: 0.03
+  max_length: 16384
+  bf16: true
+  gradient_checkpointing: true
+  completion_only_loss: true
+  logging_steps: 5
+  report_to: none
