@@ -145,15 +145,6 @@ accelerate launch scripts/train_grpo.py \
   --output_dir outputs/grpo_run
 ```
 
-## Reward inspection without training
-
-```bash
-python scripts/inspect_rewards.py \
-  --examples examples/profiling/sample_group_rollouts.jsonl \
-  --max_completion_tokens 8192
-```
-
-This prints parsed fields, group solvability, efficient-cost estimates, and component-level rewards.
 
 ## Evaluation
 
@@ -165,16 +156,4 @@ python scripts/evaluate_generations.py \
 
 The evaluator reports accuracy, average `<think>` tokens, fold rate, format-pass rate, and relative accuracy-efficiency score when a baseline generation file is provided.
 
-## Release sanity check
 
-Before pushing a public repository, run:
-
-```bash
-python scripts/check_release.py
-```
-
-The checker searches for common local paths, private files, PDF/PPT artifacts, metadata files, and identity-revealing strings. It is conservative and is not a substitute for manually reviewing `git status --short` before pushing.
-
-## Notes
-
-This repository intentionally excludes model checkpoints, raw benchmark dumps, private logs, paper PDFs, and metadata files. The included examples are only for pipeline validation and are not intended to reproduce paper-scale results.
