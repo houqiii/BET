@@ -1,4 +1,4 @@
-# Nice Fold or Hero Call: Budget-Efficient Thinking
+# Nice Fold or Hero Call: Learning Budget-Efficient Thinking for Adaptive Reasoning
 
 This repository provides a modular research-code implementation of **Budget-Efficient Thinking (BET)**, a two-stage training framework for learning adaptive reasoning policies that allocate test-time compute according to expected return rather than difficulty alone.
 
