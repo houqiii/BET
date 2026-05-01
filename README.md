@@ -156,4 +156,3 @@ python scripts/evaluate_generations.py \
 
 The evaluator reports accuracy, average `<think>` tokens, fold rate, format-pass rate, and relative accuracy-efficiency score when a baseline generation file is provided.
 
-
