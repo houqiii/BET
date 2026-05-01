@@ -92,7 +92,7 @@ Cold-start examples may use ShareGPT-style records or explicit `prompt` / `compl
 
 ```text
 <predict>
-Difficulty: 0.42
+Solvability: 0.75
 Budget: 0.30
 </predict>
 <think>

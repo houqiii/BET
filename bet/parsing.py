@@ -8,7 +8,7 @@ from .schemas import ParsedResponse
 
 PREDICT_BLOCK_RE = re.compile(
     r"^\s*<predict>\s*"
-    r"Difficulty:\s*([0-9]*\.?[0-9]+)\s*"
+    r"Solvability:\s*([0-9]*\.?[0-9]+)\s*"
     r"Budget:\s*([0-9]*\.?[0-9]+)\s*"
     r"</predict>",
     re.DOTALL,
@@ -107,7 +107,7 @@ def inspect_format(text: Any) -> Dict[str, Any]:
         "boxed_count_ok": boxed_count_ok,
         "order_ok": order_ok,
         "format_ok": full_format_ok,
-        "difficulty": d,
+        "solvability_pred": d,
         "budget": b,
         "boxed": boxed,
         "think": think_matches[0].group(1).strip() if len(think_matches) == 1 else "",
@@ -121,7 +121,7 @@ def parse_response(text: Any) -> ParsedResponse:
     return ParsedResponse(
         text=raw,
         format_ok=bool(info["format_ok"]),
-        difficulty=info["difficulty"],
+        solvability_pred=info["solvability_pred"],
         budget=info["budget"],
         think=info["think"],
         boxed=boxed,

@@ -1,3 +1,4 @@
+"""Composite BET reward R(y|x) = R_VAL + R_EFF + R_CAL (Section 3.3)."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -14,17 +15,23 @@ from .value import score_value
 
 @dataclass
 class BETRewardConfig:
+    """Reward hyperparameters matching Table 6 (Appendix A.4)."""
     max_completion_tokens: int = 16384
     efficient_cost_percentile: float = 0.30
+    # R_VAL (Eq. 4)
     delta: float = 0.10
     lambda_abstain: float = 0.80
+    alpha_fail: float = 0.20
+    # R_EFF (Eq. 5)
     beta: float = 0.30
     tau: float = 0.25
-    gamma_d: float = 0.10
-    gamma_b_under: float = 0.20
-    gamma_b_over: float = 0.10
-    gamma_d_unsolvable: float = 0.40
-    gamma_b_unsolvable: float = 0.40
+    # R_CAL (Eq. 6)
+    gamma_s: float = 0.10
+    gamma_b: float = 0.20
+    gamma_s_unsolvable: float = 0.20
+    gamma_b_unsolvable: float = 0.10
+    mu: float = 2.0
+    # Format reward
     include_format_reward: bool = True
 
 
@@ -45,24 +52,20 @@ def compute_bet_rewards(
     out: List[RewardBreakdown] = []
     for p, c, a in zip(prompts, completions, answers):
         r_val = score_value(
-            p,
-            c,
-            a,
-            profiles,
+            p, c, a, profiles,
             delta=cfg.delta,
             lambda_abstain=cfg.lambda_abstain,
+            alpha_fail=cfg.alpha_fail,
             max_completion_tokens=cfg.max_completion_tokens,
         )
         r_eff = score_efficiency(p, c, a, profiles, beta=cfg.beta, tau=cfg.tau)
         r_cal, _ = score_calibration(
-            p,
-            c,
-            profiles,
-            gamma_d=cfg.gamma_d,
-            gamma_b_under=cfg.gamma_b_under,
-            gamma_b_over=cfg.gamma_b_over,
-            gamma_d_unsolvable=cfg.gamma_d_unsolvable,
+            p, c, profiles,
+            gamma_s=cfg.gamma_s,
+            gamma_b=cfg.gamma_b,
+            gamma_s_unsolvable=cfg.gamma_s_unsolvable,
             gamma_b_unsolvable=cfg.gamma_b_unsolvable,
+            mu=cfg.mu,
         )
         r_fmt = score_format(c) if cfg.include_format_reward else 0.0
         out.append(RewardBreakdown(value=r_val, efficiency=r_eff, calibration=r_cal, format=r_fmt))
@@ -75,6 +78,7 @@ def _component_reward(component: str, cfg: BETRewardConfig, prompts, completions
 
 
 def make_trl_reward_functions(config: BETRewardConfig | None = None) -> List[Any]:
+    """Return a list of reward functions compatible with TRL's GRPOTrainer."""
     cfg = config or BETRewardConfig()
     functions = [
         partial(_component_reward, "value", cfg),

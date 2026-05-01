@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional
 class ParsedResponse:
     text: str
     format_ok: bool
-    difficulty: Optional[float]
+    solvability_pred: Optional[float]
     budget: Optional[float]
     think: str
     boxed: Optional[str]
@@ -27,7 +27,6 @@ class GroupProfile:
     solvability: float
     efficient_cost: float
     budget_target: float
-    difficulty_target: float
     correct_lengths: List[float]
 
     @property

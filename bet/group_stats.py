@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 from collections import defaultdict
-from typing import Any, Dict, Iterable, List, Sequence, Tuple
+from typing import Any, Dict, List, Sequence, Tuple
 
 from .math_eval import is_correct
 from .parsing import get_text, think_token_proxy
@@ -13,18 +13,6 @@ def prompt_key(prompt: Any) -> str:
     return get_text(prompt).strip()
 
 
-def budget_from_length(length: float, max_completion_tokens: float) -> float:
-    raw = float(length) / max(1.0, float(max_completion_tokens))
-    # Decile target used for stable calibration rather than an overly precise scalar.
-    return min(1.0, max(0.1, math.ceil(raw * 10.0 - 1e-8) / 10.0))
-
-
-def difficulty_target(s_hat: float, b_star: float, zero_return: bool) -> float:
-    if zero_return:
-        return 1.0
-    return min(0.9, max(0.0, 0.35 * (1.0 - s_hat) + 0.65 * b_star))
-
-
 def compute_group_profiles(
     prompts: Sequence[Any],
     completions: Sequence[Any],
@@ -33,6 +21,12 @@ def compute_group_profiles(
     max_completion_tokens: float,
     efficient_cost_percentile: float = 0.30,
 ) -> Dict[str, GroupProfile]:
+    """Compute per-query group profiles from K rollouts.
+
+    Returns solvability s_hat(x) and efficient solution cost c_hat_star(x)
+    as defined in Section 3.2 of the paper.  The budget target b*(x) is
+    simply c_hat_star(x) / L_max (Table 7, Appendix A.5).
+    """
     groups: Dict[str, List[Tuple[Any, Any]]] = defaultdict(list)
     for p, c, a in zip(prompts, completions, answers):
         groups[prompt_key(p)].append((c, a))
@@ -44,16 +38,18 @@ def compute_group_profiles(
         correct_lengths = [l for l, ok in zip(lengths, correct_flags) if ok]
         n = len(items)
         num_correct = sum(correct_flags)
+        # Eq. 3: s_hat(x) = (1/K) * sum 1[CORRECT(y_k)]
         s_hat = num_correct / n if n else 0.0
         if correct_lengths:
             sorted_lengths = sorted(correct_lengths)
+            # m(x) = max{1, ceil(p * |C(x)|)}
             k = max(1, math.ceil(len(sorted_lengths) * efficient_cost_percentile))
             c_star = sum(sorted_lengths[:k]) / k
-            b_star = budget_from_length(c_star, max_completion_tokens)
+            # Table 7: b*(x) = c_hat_star(x) / L_max
+            b_star = min(1.0, c_star / max(1.0, max_completion_tokens))
         else:
             c_star = 0.0
             b_star = 0.0
-        d_star = difficulty_target(s_hat, b_star, zero_return=(num_correct == 0))
         profiles[key] = GroupProfile(
             prompt_key=key,
             n=n,
@@ -61,7 +57,6 @@ def compute_group_profiles(
             solvability=s_hat,
             efficient_cost=c_star,
             budget_target=b_star,
-            difficulty_target=d_star,
             correct_lengths=correct_lengths,
         )
     return profiles

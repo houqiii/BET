@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional
 BET_SYSTEM_PROMPT = """Solve the problem efficiently.
 Before reasoning, output a self-assessment block:
 <predict>
-Difficulty: <number in [0,1]>
+Solvability: <number in [0,1]>
 Budget: <number in [0,1]>
 </predict>
 Then reason inside <think>...</think>.
