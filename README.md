@@ -1,6 +1,6 @@
-# Nice Fold or Hero Call: Learning Budget-Efficient Thinking for Adaptive Reasoning
+# Nice Fold or Hero Call: Learning Budget-Efficient Thinking under Policy-Dependent Solvability
 
-This repository provides a modular research-code implementation of **Budget-Efficient Thinking (BET)**, a two-stage training framework for learning adaptive reasoning policies that allocate test-time compute according to expected return rather than difficulty alone.
+This repository provides a modular research-code implementation of **Budget-Efficient Thinking (BET)**, a two-stage training framework for learning adaptive reasoning policies that allocate test-time compute by policy-dependent solvability.
 
 BET targets three behaviors:
 
@@ -25,10 +25,11 @@ bet/
   parsing.py                    Strict parser for <predict>, <think>, and boxed answers
   math_eval.py                  Lightweight math-answer normalization and matching
   group_stats.py                Group solvability and efficient-cost estimation
+  group_constraint.py           Guaranteed attempt within a rollout group
   prompts.py                    BET response protocol and chat-template helpers
   rewards/                      R_VAL, R_EFF, R_CAL, and format-stability rewards
   data/                         JSONL loaders, SFT builders, rollout profile utilities
-  training/                     SFT/GRPO trainer builders and model helpers
+  training/                     SFT/GRPO trainer builders, two-phase rollout, model helpers
   evaluation/                   Accuracy, token, fold-rate, and efficiency metrics
 scripts/
   train_sft.py                  LoRA SFT cold-start entry point
@@ -101,9 +102,15 @@ Budget: 0.30
 \boxed{answer}
 ```
 
-If the model folds, the final answer is:
+If the model folds, the `<predict>` block commits to a zero budget before any reasoning is generated:
 
 ```text
+<predict>
+Solvability: 0.00
+Budget: 0.00
+</predict>
+<think>
+</think>
 \boxed{Unsolvable}
 ```
 
@@ -131,6 +138,10 @@ accelerate launch scripts/train_grpo.py \
 ```
 
 The GRPO trainer recomputes group-level statistics from the current rollouts, including policy-dependent solvability and efficient solution cost. These statistics condition the composite reward.
+
+Every group keeps one attempt. When all `K` rollouts declare abstention in `<predict>`, one of them,
+chosen uniformly at random, is rewritten to a positive budget before reasoning begins; see
+`bet/group_constraint.py`, `bet/training/rollout.py`, and `docs/reward_design.md`.
 
 For vLLM server mode, launch a server separately and pass the URL:
 

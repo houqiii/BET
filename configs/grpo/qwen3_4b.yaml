@@ -22,18 +22,14 @@ training:
   report_to: none
   seed: 42
 
-# Reward hyperparameters matching Table 6 (Appendix A.4)
 reward:
   max_completion_tokens: 16384
   efficient_cost_percentile: 0.30
-  # R_VAL (Eq. 4)
   delta: 0.10
   lambda_abstain: 0.80
   alpha_fail: 0.20
-  # R_EFF (Eq. 5)
   beta: 0.30
-  tau: 0.25
-  # R_CAL (Eq. 6)
+  tau: 0.20
   gamma_s: 0.10
   gamma_b: 0.20
   gamma_s_unsolvable: 0.20

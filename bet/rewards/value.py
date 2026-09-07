@@ -1,4 +1,3 @@
-"""R_VAL: Solution value with abstention gate (Eq. 4)."""
 from __future__ import annotations
 
 from typing import Any, List, Mapping, Sequence
@@ -19,21 +18,13 @@ def score_value(
     alpha_fail: float,
     max_completion_tokens: float,
 ) -> float:
-    """Per-trajectory R_VAL as defined in Eq. 4.
-
-    - Correct solution:  +1
-    - Incorrect attempt: -phi(c(y)), where phi(c) = alpha_fail * c / L_max
-    - Abstention:        +delta   if s_hat(x) < epsilon_abs,
-                         -lambda  if s_hat(x) >= epsilon_abs.
-    """
+    """+1 for a correct solution, -phi(c) for a failed attempt, gated value for abstention."""
     profile = profiles[prompt_key(prompt)]
     parsed = parse_response(completion)
     if is_correct(completion, answer):
         return 1.0
     if parsed.is_fold:
-        # epsilon_abs = 1/K, equivalent to num_correct == 0
         return delta if profile.num_correct == 0 else -lambda_abstain
-    # phi(c) = alpha_fail * c(y) / L_max
     length = think_token_proxy(completion)
     ratio = min(1.0, length / max(1.0, max_completion_tokens))
     return -alpha_fail * ratio

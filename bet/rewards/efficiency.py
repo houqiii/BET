@@ -32,7 +32,7 @@ def reward_efficiency(
     *,
     profiles: Mapping[str, Any],
     beta: float = 0.30,
-    tau: float = 0.25,
+    tau: float = 0.20,
     **kwargs: Any,
 ) -> List[float]:
     return [score_efficiency(p, c, a, profiles, beta=beta, tau=tau) for p, c, a in zip(prompts, completions, answer)]

@@ -3,7 +3,14 @@ from __future__ import annotations
 import re
 from typing import Any, Dict, Optional, Tuple
 
-from .constants import PREDICT_END, PREDICT_START, THINK_END, THINK_START, UNSOLVABLE_TOKEN
+from .constants import (
+    DECLARED_ABSTAIN_TOL,
+    PREDICT_END,
+    PREDICT_START,
+    THINK_END,
+    THINK_START,
+    UNSOLVABLE_TOKEN,
+)
 from .schemas import ParsedResponse
 
 PREDICT_BLOCK_RE = re.compile(
@@ -130,8 +137,16 @@ def parse_response(text: Any) -> ParsedResponse:
     )
 
 
-def think_token_proxy(text: Any) -> float:
+def declared_abstention(text: Any, *, tol: float = DECLARED_ABSTAIN_TOL) -> bool:
+    solvability, budget, ok = parse_predict(text)
+    if not ok or solvability is None or budget is None:
+        return False
+    return solvability <= tol and budget <= tol
+
+
+def think_token_proxy(text: Any, tokenizer: Any = None) -> float:
     parsed = parse_response(text)
-    if parsed.think:
-        return len(parsed.think) / 4.0
-    return len(get_text(text)) / 4.0
+    segment = parsed.think or get_text(text)
+    if tokenizer is not None and hasattr(tokenizer, "encode"):
+        return float(len(tokenizer.encode(segment, add_special_tokens=False)))
+    return len(segment) / 4.0

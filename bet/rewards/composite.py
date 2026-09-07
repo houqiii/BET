@@ -1,4 +1,4 @@
-"""Composite BET reward R(y|x) = R_VAL + R_EFF + R_CAL (Section 3.3)."""
+"""Composite BET reward R(y|x) = R_VAL + R_EFF + R_CAL."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -15,23 +15,18 @@ from .value import score_value
 
 @dataclass
 class BETRewardConfig:
-    """Reward hyperparameters matching Table 6 (Appendix A.4)."""
     max_completion_tokens: int = 16384
     efficient_cost_percentile: float = 0.30
-    # R_VAL (Eq. 4)
     delta: float = 0.10
     lambda_abstain: float = 0.80
     alpha_fail: float = 0.20
-    # R_EFF (Eq. 5)
     beta: float = 0.30
-    tau: float = 0.25
-    # R_CAL (Eq. 6)
+    tau: float = 0.20
     gamma_s: float = 0.10
     gamma_b: float = 0.20
     gamma_s_unsolvable: float = 0.20
     gamma_b_unsolvable: float = 0.10
     mu: float = 2.0
-    # Format reward
     include_format_reward: bool = True
 
 
@@ -40,8 +35,10 @@ def compute_bet_rewards(
     completions: Sequence[Any],
     answers: Sequence[Any],
     config: BETRewardConfig | None = None,
+    overridden: Sequence[bool] | None = None,
 ) -> List[RewardBreakdown]:
     cfg = config or BETRewardConfig()
+    flags = list(overridden) if overridden is not None else [False] * len(list(completions))
     profiles = compute_group_profiles(
         prompts,
         completions,
@@ -50,7 +47,7 @@ def compute_bet_rewards(
         efficient_cost_percentile=cfg.efficient_cost_percentile,
     )
     out: List[RewardBreakdown] = []
-    for p, c, a in zip(prompts, completions, answers):
+    for i, (p, c, a) in enumerate(zip(prompts, completions, answers)):
         r_val = score_value(
             p, c, a, profiles,
             delta=cfg.delta,
@@ -59,21 +56,24 @@ def compute_bet_rewards(
             max_completion_tokens=cfg.max_completion_tokens,
         )
         r_eff = score_efficiency(p, c, a, profiles, beta=cfg.beta, tau=cfg.tau)
-        r_cal, _ = score_calibration(
-            p, c, profiles,
-            gamma_s=cfg.gamma_s,
-            gamma_b=cfg.gamma_b,
-            gamma_s_unsolvable=cfg.gamma_s_unsolvable,
-            gamma_b_unsolvable=cfg.gamma_b_unsolvable,
-            mu=cfg.mu,
-        )
+        if i < len(flags) and flags[i]:
+            r_cal = 0.0
+        else:
+            r_cal, _ = score_calibration(
+                p, c, profiles,
+                gamma_s=cfg.gamma_s,
+                gamma_b=cfg.gamma_b,
+                gamma_s_unsolvable=cfg.gamma_s_unsolvable,
+                gamma_b_unsolvable=cfg.gamma_b_unsolvable,
+                mu=cfg.mu,
+            )
         r_fmt = score_format(c) if cfg.include_format_reward else 0.0
         out.append(RewardBreakdown(value=r_val, efficiency=r_eff, calibration=r_cal, format=r_fmt))
     return out
 
 
-def _component_reward(component: str, cfg: BETRewardConfig, prompts, completions, answer, **kwargs):
-    breakdowns = compute_bet_rewards(prompts, completions, answer, cfg)
+def _component_reward(component: str, cfg: BETRewardConfig, prompts, completions, answer, overridden=None, **kwargs):
+    breakdowns = compute_bet_rewards(prompts, completions, answer, cfg, overridden=overridden)
     return [getattr(b, component) for b in breakdowns]
 
 

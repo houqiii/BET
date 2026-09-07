@@ -31,6 +31,7 @@ def main():
             efficient_cost=float(r['efficient_cost']),
             selected_trace=r.get('selected_trace', ''),
             selected_answer=r.get('selected_answer', r.get('answer', '').replace('\\boxed{', '').rstrip('}')),
+            difficulty=None if r.get('difficulty') is None else float(r['difficulty']),
         )
         out.append(profile_to_sft_target(rec))
     write_jsonl(args.output, out)
