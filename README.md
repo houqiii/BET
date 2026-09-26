@@ -137,7 +137,7 @@ accelerate launch scripts/train_grpo.py \
   --output_dir outputs/grpo_debug
 ```
 
-The GRPO trainer recomputes group-level statistics from the current rollouts, including policy-dependent solvability and efficient solution cost. These statistics condition the composite reward.
+The BET GRPO trainer recomputes group-level statistics from the current rollouts, including policy-dependent solvability and efficient solution cost over complete groups across training ranks. Costs use the policy tokenizer. These statistics condition the composite reward.
 
 Every group keeps one attempt. When all `K` rollouts declare abstention in `<predict>`, one of them,
 chosen uniformly at random, is rewritten to a positive budget before reasoning begins; see
@@ -162,6 +162,7 @@ accelerate launch scripts/train_grpo.py \
 ```bash
 python scripts/evaluate_generations.py \
   --predictions examples/predictions/sample_generations.jsonl \
+  --tokenizer /path/to/model \
   --output outputs/sample_eval.json
 ```
 

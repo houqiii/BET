@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from typing import Any, Dict, List, Optional
 
 BET_SYSTEM_PROMPT = """Solve the problem efficiently.
@@ -10,7 +12,7 @@ Budget: <number in [0,1]>
 </predict>
 Then reason inside <think>...</think>.
 End with exactly one final answer in \\boxed{}.
-If the problem is beyond your current reliable capability, keep the reasoning short and output \\boxed{Unsolvable}.
+If the problem is beyond your current reliable capability, declare Budget: 0.00, keep the reasoning short and output \\boxed{Unsolvable}.
 """
 
 
@@ -21,11 +23,14 @@ def build_user_prompt(problem: str, system_prompt: str = BET_SYSTEM_PROMPT) -> s
 def apply_chat_template(tokenizer: Any, problem: str, *, add_generation_prompt: bool = True) -> str:
     messages = [{"role": "user", "content": build_user_prompt(problem)}]
     if hasattr(tokenizer, "apply_chat_template"):
-        return tokenizer.apply_chat_template(
+        prompt = tokenizer.apply_chat_template(
             messages,
             tokenize=False,
             add_generation_prompt=add_generation_prompt,
         )
+        if add_generation_prompt:
+            prompt = re.sub(r'<think>\s*$', '', prompt)
+        return prompt
     return build_user_prompt(problem) + "\n\nAssistant:\n"
 
 

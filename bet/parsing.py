@@ -65,8 +65,10 @@ def parse_predict(text: Any) -> Tuple[Optional[float], Optional[float], bool]:
     if not m:
         return None, None, False
     try:
-        d = clamp01(float(m.group(1)))
-        b = clamp01(float(m.group(2)))
+        d = float(m.group(1))
+        b = float(m.group(2))
+        if not (0 <= d <= 1 and 0 <= b <= 1):
+            return None, None, False
     except ValueError:
         return None, None, False
     return d, b, True
@@ -141,12 +143,17 @@ def declared_abstention(text: Any, *, tol: float = DECLARED_ABSTAIN_TOL) -> bool
     solvability, budget, ok = parse_predict(text)
     if not ok or solvability is None or budget is None:
         return False
-    return solvability <= tol and budget <= tol
+    return budget <= tol
 
 
 def think_token_proxy(text: Any, tokenizer: Any = None) -> float:
-    parsed = parse_response(text)
-    segment = parsed.think or get_text(text)
+    raw = get_text(text)
+    if THINK_START in raw:
+        segment = raw.split(THINK_START, 1)[1].split(THINK_END, 1)[0].strip()
+    elif THINK_END in raw:
+        segment = raw.split(THINK_END, 1)[0].strip()
+    else:
+        segment = raw
     if tokenizer is not None and hasattr(tokenizer, "encode"):
         return float(len(tokenizer.encode(segment, add_special_tokens=False)))
     return len(segment) / 4.0

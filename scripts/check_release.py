@@ -32,7 +32,7 @@ FORBIDDEN_TEXT_PATTERNS = [
     'affil' + r'iation',
 ]
 
-SKIP_DIRS = {'.git', '__pycache__', '.pytest_cache', '.mypy_cache'}
+SKIP_DIRS = {'.git', '.venv', '__pycache__', '.pytest_cache', '.mypy_cache'}
 TEXT_SUFFIXES = {'.py', '.md', '.txt', '.yaml', '.yml', '.toml', '.json', '.jsonl', '.sh'}
 
 

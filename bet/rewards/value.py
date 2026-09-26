@@ -17,6 +17,7 @@ def score_value(
     lambda_abstain: float,
     alpha_fail: float,
     max_completion_tokens: float,
+    tokenizer: Any = None,
 ) -> float:
     """+1 for a correct solution, -phi(c) for a failed attempt, gated value for abstention."""
     profile = profiles[prompt_key(prompt)]
@@ -25,7 +26,7 @@ def score_value(
         return 1.0
     if parsed.is_fold:
         return delta if profile.num_correct == 0 else -lambda_abstain
-    length = think_token_proxy(completion)
+    length = think_token_proxy(completion, tokenizer)
     ratio = min(1.0, length / max(1.0, max_completion_tokens))
     return -alpha_fail * ratio
 
@@ -40,6 +41,7 @@ def reward_value(
     lambda_abstain: float = 0.80,
     alpha_fail: float = 0.20,
     max_completion_tokens: float = 16384,
+    tokenizer: Any = None,
     **kwargs: Any,
 ) -> List[float]:
     return [
@@ -49,6 +51,7 @@ def reward_value(
             lambda_abstain=lambda_abstain,
             alpha_fail=alpha_fail,
             max_completion_tokens=max_completion_tokens,
+            tokenizer=tokenizer,
         )
         for p, c, a in zip(prompts, completions, answer)
     ]

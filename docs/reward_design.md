@@ -24,9 +24,12 @@ rollout of a query declares abstention, `s_hat(x)` is zero by construction, all 
 `bet.group_constraint` keeps one attempt in every group. The abstain-or-attempt decision is read from
 the `<predict>` block, so a group in which all `K` rollouts declare abstention has one entry, chosen
 uniformly at random, rewritten to a positive budget before any reasoning is generated. The group size
-stays at `K`. The rewritten declaration is excluded from `R_CAL`, while `R_VAL` and `R_EFF` apply to
-its reasoning and answer as usual.
+stays at `K`. The rewritten declaration is excluded from the policy-gradient loss. Its tokens remain visible
+to attention, and the full composite reward still trains the generated reasoning and answer.
 
 `bet.training.rollout.generate_group` implements the two-phase rollout this requires: generate up to
 `</predict>`, apply the constraint, then complete each trace. Both phases take a caller-supplied
 generation function, so the same code path works with a local model or a vLLM server.
+
+The training entry point uses `BETGRPOTrainer` for both phases. Group profiles are computed over
+all `K` rollouts across ranks, and reward costs use the policy tokenizer.

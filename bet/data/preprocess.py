@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
-from ..prompts import build_user_prompt, sharegpt_to_prompt_completion
+from ..prompts import apply_chat_template, build_user_prompt, sharegpt_to_prompt_completion
 
 
 def normalize_grpo_record(record: Dict[str, Any]) -> Dict[str, str]:
@@ -20,4 +20,5 @@ def normalize_sft_record(record: Dict[str, Any], tokenizer: Optional[Any] = None
     completion = record.get('completion') or record.get('response')
     if problem is None or completion is None:
         raise ValueError(f"SFT record must contain conversations, prompt/completion, or problem/completion: {record}")
-    return {'prompt': build_user_prompt(str(problem)), 'completion': str(completion)}
+    prompt = apply_chat_template(tokenizer, str(problem)) if tokenizer is not None else build_user_prompt(str(problem))
+    return {'prompt': prompt, 'completion': str(completion)}

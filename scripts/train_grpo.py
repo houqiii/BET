@@ -11,8 +11,8 @@ from pathlib import Path
 
 import torch
 from datasets import Dataset, load_dataset
-from transformers import AutoModelForCausalLM, AutoTokenizer
-from trl import GRPOConfig, GRPOTrainer
+from transformers import AutoTokenizer
+from trl import GRPOConfig
 
 from bet.data.preprocess import normalize_grpo_record
 from bet.prompts import apply_chat_template
@@ -20,7 +20,8 @@ from bet.rewards import make_trl_reward_functions
 from bet.training.callbacks import BETConsoleCallback
 from bet.training.config import load_config
 from bet.training.grpo import reward_config_from_dict
-from bet.training.model_utils import maybe_set_pad_token
+from bet.training.trainer import BETGRPOTrainer
+from bet.training.model_utils import maybe_set_pad_token, load_policy_model
 
 
 def parse_args():
@@ -52,7 +53,7 @@ def main():
         rows.append({'prompt': prompt, 'answer': norm['answer'], 'id': norm.get('id', '')})
     train_dataset = Dataset.from_list(rows)
 
-    model = AutoModelForCausalLM.from_pretrained(
+    model = load_policy_model(
         model_name,
         torch_dtype=torch.bfloat16 if cfg.get('training', {}).get('bf16', True) else torch.float16,
         trust_remote_code=True,
@@ -66,7 +67,7 @@ def main():
         num_train_epochs=tr.get('num_train_epochs', 1),
         per_device_train_batch_size=tr.get('per_device_train_batch_size', 1),
         gradient_accumulation_steps=tr.get('gradient_accumulation_steps', 16),
-        num_generations=tr.get('num_generations', 8),
+        num_generations=tr.get('num_generations', 16),
         generation_batch_size=tr.get('generation_batch_size', None),
         max_completion_length=tr.get('max_completion_length', 16384),
         temperature=tr.get('temperature', 0.8),
@@ -76,18 +77,27 @@ def main():
         report_to=tr.get('report_to', 'none'),
         bf16=tr.get('bf16', True),
         seed=tr.get('seed', 42),
+        max_steps=tr.get('max_steps', 300),
+        weight_decay=tr.get('weight_decay', 0.0),
+        epsilon=tr.get('epsilon', 0.0625),
+        beta=0.0,
+        loss_type='grpo',
+        scale_rewards='group',
+        vllm_mode='server',
+        vllm_importance_sampling_correction=False,
     )
     if args.vllm_server_url:
         grpo_kwargs['use_vllm'] = True
-        grpo_kwargs['vllm_server_host'] = args.vllm_server_url
+        grpo_kwargs['vllm_server_base_url'] = args.vllm_server_url
     grpo_kwargs = {k: v for k, v in grpo_kwargs.items() if v is not None}
     training_args = GRPOConfig(**grpo_kwargs)
 
     reward_cfg = reward_config_from_dict(cfg)
-    trainer = GRPOTrainer(
+    reward_cfg.max_completion_tokens = training_args.max_completion_length
+    trainer = BETGRPOTrainer(
         model=model,
         processing_class=tokenizer,
-        reward_funcs=make_trl_reward_functions(reward_cfg),
+        reward_funcs=make_trl_reward_functions(reward_cfg, tokenizer=tokenizer),
         train_dataset=train_dataset,
         args=training_args,
         callbacks=[BETConsoleCallback()],

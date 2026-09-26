@@ -15,12 +15,17 @@ from bet.group_stats import compute_group_profiles
 def parse_args():
     p = argparse.ArgumentParser(description='Summarize grouped rollouts into solvability and efficient-cost estimates.')
     p.add_argument('--rollouts', required=True, help='JSONL with prompt, answer, and rollouts list')
+    p.add_argument('--tokenizer', default=None)
     p.add_argument('--max_completion_tokens', type=int, default=16384)
     return p.parse_args()
 
 
 def main():
     args = parse_args()
+    tokenizer = None
+    if args.tokenizer:
+        from transformers import AutoTokenizer
+        tokenizer = AutoTokenizer.from_pretrained(args.tokenizer)
     prompts, completions, answers = [], [], []
     with open(args.rollouts, 'r', encoding='utf-8') as f:
         for line in f:
@@ -29,7 +34,7 @@ def main():
                 prompts.append(row['prompt'])
                 answers.append(row['answer'])
                 completions.append(rollout['completion'])
-    profiles = compute_group_profiles(prompts, completions, answers, max_completion_tokens=args.max_completion_tokens)
+    profiles = compute_group_profiles(prompts, completions, answers, max_completion_tokens=args.max_completion_tokens, tokenizer=tokenizer)
     for p in profiles.values():
         print(json.dumps(p.__dict__, ensure_ascii=False))
 

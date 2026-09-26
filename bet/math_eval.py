@@ -16,11 +16,19 @@ def normalize_math(s: Any) -> str:
     s = s.replace("\\left", "").replace("\\right", "")
     s = s.replace("\\mathrm", "").replace("\\text", "")
     s = re.sub(r"[\$\s\n\t]+", "", s)
-    s = s.strip("{}")
+    while s.startswith("{") and s.endswith("}"):
+        depth = 0
+        for i, char in enumerate(s):
+            depth += (char == "{") - (char == "}")
+            if depth == 0:
+                break
+        if i != len(s) - 1:
+            break
+        s = s[1:-1]
     return s
 
 
-def _try_fraction(s: str) -> Optional[Fraction]:
+def _parse_fraction(s: str) -> Optional[Fraction]:
     s = normalize_math(s)
     m = re.fullmatch(r"(-?\d+)\\frac\{(-?\d+)\}\{(-?\d+)\}", s)
     if m:
@@ -32,10 +40,17 @@ def _try_fraction(s: str) -> Optional[Fraction]:
     m = re.fullmatch(r"(-?\d+)/(-?\d+)", s)
     if m:
         return Fraction(int(m.group(1)), int(m.group(2)))
-    m = re.fullmatch(r"-?\d+", s)
+    m = re.fullmatch(r"-?\d+(?:\.\d+)?", s)
     if m:
-        return Fraction(int(s), 1)
+        return Fraction(s)
     return None
+
+
+def _try_fraction(s: str) -> Optional[Fraction]:
+    try:
+        return _parse_fraction(s)
+    except (ValueError, ZeroDivisionError):
+        return None
 
 
 def math_equal(pred: Any, gold: Any) -> bool:

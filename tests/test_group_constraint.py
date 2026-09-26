@@ -38,7 +38,7 @@ def test_apply_guaranteed_attempt_keeps_group_size():
     assert declared_abstentions(texts).count(False) == 1
 
 
-def test_calibration_is_masked_for_the_overridden_rollout():
+def test_override_keeps_reward_calibration_for_the_generated_trace():
     prompts = ["Problem: impossible"] * 2
     answers = [r"\boxed{999}"] * 2
     completions = [
@@ -49,6 +49,6 @@ def test_calibration_is_masked_for_the_overridden_rollout():
     plain = compute_bet_rewards(prompts, completions, answers, cfg)
     masked = compute_bet_rewards(prompts, completions, answers, cfg, overridden=[False, True])
     assert plain[1].calibration != 0.0
-    assert masked[1].calibration == 0.0
+    assert masked[1].calibration == plain[1].calibration
     assert masked[1].value == plain[1].value
     assert masked[1].efficiency == plain[1].efficiency

@@ -15,13 +15,14 @@ def score_efficiency(
     *,
     beta: float,
     tau: float,
+    tokenizer: Any = None,
 ) -> float:
     profile = profiles[prompt_key(prompt)]
     if profile.solvability <= tau or not is_correct(completion, answer):
         return 0.0
     if profile.efficient_cost <= 0:
         return 0.0
-    length = think_token_proxy(completion)
+    length = think_token_proxy(completion, tokenizer)
     return beta * max(0.0, 1.0 - length / profile.efficient_cost)
 
 
@@ -33,6 +34,7 @@ def reward_efficiency(
     profiles: Mapping[str, Any],
     beta: float = 0.30,
     tau: float = 0.20,
+    tokenizer: Any = None,
     **kwargs: Any,
 ) -> List[float]:
-    return [score_efficiency(p, c, a, profiles, beta=beta, tau=tau) for p, c, a in zip(prompts, completions, answer)]
+    return [score_efficiency(p, c, a, profiles, beta=beta, tau=tau, tokenizer=tokenizer) for p, c, a in zip(prompts, completions, answer)]

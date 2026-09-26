@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 MODEL_PATH=${1:-outputs/sft_merged}
-PORT=${PORT:-8000}
-MAX_MODEL_LEN=${MAX_MODEL_LEN:-16384}
+PORT=${2:-${PORT:-8000}}
+MAX_MODEL_LEN=${MAX_MODEL_LEN:-18432}
 GPU_MEMORY_UTILIZATION=${GPU_MEMORY_UTILIZATION:-0.90}
 
-python -m vllm.entrypoints.openai.api_server \
+trl vllm-serve \
   --model "$MODEL_PATH" \
   --port "$PORT" \
   --max-model-len "$MAX_MODEL_LEN" \

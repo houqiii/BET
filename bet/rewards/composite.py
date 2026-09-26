@@ -36,48 +36,49 @@ def compute_bet_rewards(
     answers: Sequence[Any],
     config: BETRewardConfig | None = None,
     overridden: Sequence[bool] | None = None,
+    tokenizer: Any = None,
 ) -> List[RewardBreakdown]:
     cfg = config or BETRewardConfig()
-    flags = list(overridden) if overridden is not None else [False] * len(list(completions))
+    if not (len(prompts) == len(completions) == len(answers)):
+        raise ValueError("Prompts, completions, and answers must have equal lengths.")
     profiles = compute_group_profiles(
         prompts,
         completions,
         answers,
         max_completion_tokens=cfg.max_completion_tokens,
         efficient_cost_percentile=cfg.efficient_cost_percentile,
+        tokenizer=tokenizer,
     )
     out: List[RewardBreakdown] = []
-    for i, (p, c, a) in enumerate(zip(prompts, completions, answers)):
+    for p, c, a in zip(prompts, completions, answers):
         r_val = score_value(
             p, c, a, profiles,
             delta=cfg.delta,
             lambda_abstain=cfg.lambda_abstain,
             alpha_fail=cfg.alpha_fail,
             max_completion_tokens=cfg.max_completion_tokens,
+            tokenizer=tokenizer,
         )
-        r_eff = score_efficiency(p, c, a, profiles, beta=cfg.beta, tau=cfg.tau)
-        if i < len(flags) and flags[i]:
-            r_cal = 0.0
-        else:
-            r_cal, _ = score_calibration(
-                p, c, profiles,
-                gamma_s=cfg.gamma_s,
-                gamma_b=cfg.gamma_b,
-                gamma_s_unsolvable=cfg.gamma_s_unsolvable,
-                gamma_b_unsolvable=cfg.gamma_b_unsolvable,
-                mu=cfg.mu,
-            )
+        r_eff = score_efficiency(p, c, a, profiles, beta=cfg.beta, tau=cfg.tau, tokenizer=tokenizer)
+        r_cal, _ = score_calibration(
+            p, c, profiles,
+            gamma_s=cfg.gamma_s,
+            gamma_b=cfg.gamma_b,
+            gamma_s_unsolvable=cfg.gamma_s_unsolvable,
+            gamma_b_unsolvable=cfg.gamma_b_unsolvable,
+            mu=cfg.mu,
+        )
         r_fmt = score_format(c) if cfg.include_format_reward else 0.0
         out.append(RewardBreakdown(value=r_val, efficiency=r_eff, calibration=r_cal, format=r_fmt))
     return out
 
 
-def _component_reward(component: str, cfg: BETRewardConfig, prompts, completions, answer, overridden=None, **kwargs):
-    breakdowns = compute_bet_rewards(prompts, completions, answer, cfg, overridden=overridden)
+def _component_reward(component: str, cfg: BETRewardConfig, prompts, completions, answer, tokenizer=None, **kwargs):
+    breakdowns = compute_bet_rewards(prompts, completions, answer, cfg, tokenizer=tokenizer)
     return [getattr(b, component) for b in breakdowns]
 
 
-def make_trl_reward_functions(config: BETRewardConfig | None = None) -> List[Any]:
+def make_trl_reward_functions(config: BETRewardConfig | None = None, tokenizer: Any = None) -> List[Any]:
     """Return a list of reward functions compatible with TRL's GRPOTrainer."""
     cfg = config or BETRewardConfig()
     functions = [
@@ -87,4 +88,7 @@ def make_trl_reward_functions(config: BETRewardConfig | None = None) -> List[Any
     ]
     if cfg.include_format_reward:
         functions.insert(0, partial(_component_reward, "format", cfg))
+    for function in functions:
+        function.keywords["tokenizer"] = tokenizer
+        function.__name__ = "bet_" + function.args[0]
     return functions

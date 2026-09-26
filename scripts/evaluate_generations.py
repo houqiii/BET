@@ -19,14 +19,19 @@ def parse_args():
     p.add_argument('--predictions', required=True)
     p.add_argument('--baseline', default=None)
     p.add_argument('--output', default=None)
+    p.add_argument('--tokenizer', default=None)
     return p.parse_args()
 
 
 def main():
     args = parse_args()
-    metrics = compute_metrics(load_jsonl(args.predictions))
+    tokenizer = None
+    if args.tokenizer:
+        from transformers import AutoTokenizer
+        tokenizer = AutoTokenizer.from_pretrained(args.tokenizer)
+    metrics = compute_metrics(load_jsonl(args.predictions), tokenizer=tokenizer)
     if args.baseline:
-        base = compute_metrics(load_jsonl(args.baseline))
+        base = compute_metrics(load_jsonl(args.baseline), tokenizer=tokenizer)
         metrics['relative_accuracy_efficiency'] = relative_accuracy_efficiency(metrics, base)
     text = json.dumps(metrics, indent=2, ensure_ascii=False)
     print(text)
